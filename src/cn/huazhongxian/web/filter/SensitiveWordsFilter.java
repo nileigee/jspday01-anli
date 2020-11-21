@@ -11,6 +11,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * 敏感词汇过滤器
@@ -38,6 +40,38 @@ public class SensitiveWordsFilter implements Filter {
                         }
                     }
                     return value;
+                }
+                //判断方法名是否是getParameterMap
+                 if(method.getName().equals("getParameterMap")){
+                     Map map=(Map) method.invoke(req,args);
+                     if(map!=null){
+                         Set keys = map.keySet();
+                         for (Object key : keys) {
+                             String value=(String) map.get(key);
+                             for (String str : list) {
+                                 if(value.contains(str)){
+                                     value=value.replaceAll(str,"***");
+                                 }
+                             }
+
+                             return value;
+                         }
+
+                     }
+                 }
+                //判断方法名是否是getParameterValue
+                if(method.getName().equals("getParameterValues")){
+                   String[] values= (String[])method.invoke(req,args);
+                   if(values.length>0){
+                       for (String value : values) {
+                           for (String str : list) {
+                               if(value.contains(str)){
+                                   value=value.replaceAll(str,"***");
+                               }
+                           }
+                           return value;
+                       }
+                   }
                 }
                 return method.invoke(req,args);
             }
